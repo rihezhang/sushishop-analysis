@@ -288,8 +288,14 @@ def create_template_files(base_path: str) -> dict:
         sales_dir = base / month_dir
         sales_dir.mkdir(parents=True, exist_ok=True)
         sales_path = sales_dir / f"sales_{today}.xlsx"
-        sales_df.to_excel(sales_path, index=False, sheet_name='订单明细')
-        results['created'].append(str(sales_path))
+
+        # 只在文件不存在时才创建模板
+        if not sales_path.exists():
+            sales_df = pd.concat([sales_df, empty_rows], ignore_index=True)
+            sales_df.to_excel(sales_path, index=False, sheet_name='订单明细')
+            results['created'].append(str(sales_path))
+        else:
+            results['created'].append(f"{sales_path} (已存在，跳过)")
 
     except Exception as e:
         results['errors'].append(str(e))
